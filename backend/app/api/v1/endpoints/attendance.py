@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from backend.app.services.database import get_db, Attendance, Student
+from app.services.database import get_db, Attendance, Student
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 from pydantic import BaseModel
 import csv
 import io
@@ -16,7 +16,7 @@ class MarkAttendanceRequest(BaseModel):
     camera_id: str = None
     timestamp: str = None  # Optional custom timestamp in ISO format
 
-@router.get("/attendance/", response_model=List[dict])
+@router.get("/", response_model=List[dict])
 async def get_attendance_records(
     skip: int = 0,
     limit: int = 100,
@@ -34,12 +34,49 @@ async def get_attendance_records(
             "roll_number": student.roll_number if student else "N/A",
             "email": student.email if student else "N/A",
             "timestamp": record.timestamp.isoformat(),
+            "date": record.timestamp.date().isoformat(),
+            "time": record.timestamp.time().isoformat(),
             "camera_id": record.camera_id or "N/A",
-            "status": "present"
+            "camera": record.camera_id or "N/A",
+            "status": "present",
+            "confidence": 95.0  # Default confidence
         })
     return results
 
-@router.post("/attendance/mark")
+@router.get("/student/{student_email}", response_model=List[dict])
+async def get_student_attendance(
+    student_email: str,
+    db: Session = Depends(get_db)
+):
+    # Find student by email
+    student = db.query(Student).filter(Student.email == student_email).first()
+    if not student:
+        raise HTTPException(status_code=404, detail=f"Student with email '{student_email}' not found")
+    
+    # Get all attendance records for this student
+    attendance_records = db.query(Attendance).filter(
+        Attendance.student_id == student.id
+    ).order_by(Attendance.timestamp.desc()).all()
+    
+    results = []
+    for record in attendance_records:
+        results.append({
+            "id": record.id,
+            "student_id": record.student_id,
+            "student_name": student.name,
+            "roll_number": student.roll_number,
+            "email": student.email,
+            "timestamp": record.timestamp.isoformat(),
+            "date": record.timestamp.date().isoformat(),
+            "time": record.timestamp.time().isoformat(),
+            "camera_id": record.camera_id or "N/A",
+            "camera": record.camera_id or "N/A",
+            "status": "present",
+            "confidence": 95.0  # Default confidence
+        })
+    return results
+
+@router.post("/mark")
 async def mark_attendance(
     request: MarkAttendanceRequest,
     db: Session = Depends(get_db)
@@ -57,6 +94,29 @@ async def mark_attendance(
             raise HTTPException(status_code=400, detail="Invalid timestamp format. Use ISO format (YYYY-MM-DDTHH:MM:SS)")
     else:
         attendance_time = datetime.now()
+    
+    # Check for duplicate attendance on the same day
+    attendance_date = attendance_time.date()
+    day_start = datetime.combine(attendance_date, datetime.min.time())
+    day_end = day_start + timedelta(days=1)
+    
+    existing_attendance = db.query(Attendance).filter(
+        Attendance.student_id == student.id,
+        Attendance.timestamp >= day_start,
+        Attendance.timestamp < day_end
+    ).first()
+    
+    if existing_attendance:
+        return {
+            "id": existing_attendance.id,
+            "student_name": student.name,
+            "roll_number": student.roll_number,
+            "status": request.status,
+            "timestamp": existing_attendance.timestamp.isoformat(),
+            "camera_id": existing_attendance.camera_id,
+            "message": f"Attendance already marked for {student.name} ({student.roll_number}) today at {existing_attendance.timestamp.strftime('%H:%M:%S')}",
+            "duplicate": True
+        }
     
     # Create attendance record
     attendance = Attendance(
@@ -78,7 +138,7 @@ async def mark_attendance(
         "message": f"Attendance marked for {student.name} ({student.roll_number})"
     }
 
-@router.delete("/attendance/{attendance_id}")
+@router.delete("/{attendance_id}")
 async def delete_attendance(
     attendance_id: int,
     db: Session = Depends(get_db)
@@ -91,7 +151,7 @@ async def delete_attendance(
     db.commit()
     return {"message": "Attendance record deleted successfully"}
 
-@router.get("/attendance/export/csv")
+@router.get("/export/csv")
 async def export_attendance_csv(db: Session = Depends(get_db)):
     attendance_records = db.query(Attendance).order_by(Attendance.timestamp.desc()).all()
     

@@ -62,13 +62,15 @@ api:
   cors_origins:
     - "http://localhost:5173"
     - "http://127.0.0.1:5173"
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
 
 # Live Stream Settings
 live_stream:
-  frame_interval_ms: 500     # Processing interval (milliseconds)
+  frame_interval_ms: 33      # Processing interval (milliseconds) - 30 FPS
   cache_refresh_seconds: 30  # Student cache refresh interval
-  jpeg_quality: 85           # Output JPEG quality (1-100)
-  resize_width: 480          # Resize frame width for faster processing
+  jpeg_quality: 75           # Output JPEG quality (1-100) - Lower for speed
+  resize_width: 640          # Resize frame width for faster processing
 
 # Camera Settings
 cameras:

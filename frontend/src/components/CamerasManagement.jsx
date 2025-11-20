@@ -59,12 +59,13 @@ function CamerasManagement() {
     }
     
     try {
-      // TODO: Implement delete API call
-      alert('Delete functionality will be implemented')
+      const { removeCameraStream } = await import('../api')
+      await removeCameraStream(cameraId)
+      alert('Camera deleted successfully!')
       fetchCameras()
     } catch (err) {
       console.error('Error deleting camera:', err)
-      alert('Failed to delete camera')
+      alert('Failed to delete camera: ' + err.message)
     }
   }
 
@@ -73,6 +74,11 @@ function CamerasManagement() {
     
     if (!formData.stream_url || formData.stream_url.trim() === '') {
       alert('Please enter a camera stream URL')
+      return
+    }
+    
+    if (selectedCamera) {
+      alert('Edit functionality requires backend API implementation. Currently, you can only add or delete cameras.')
       return
     }
     
@@ -108,7 +114,7 @@ function CamerasManagement() {
       <div className="card-actions">
         <div></div>
         <button className="btn btn-primary" onClick={handleAddCamera}>
-          📹 Add Camera
+          Add Camera
         </button>
       </div>
 
@@ -117,29 +123,29 @@ function CamerasManagement() {
           {cameras.map((camera) => (
             <div key={camera.id} className="camera-card">
               <div className="camera-header">
-                <div className="camera-icon">📹</div>
+                <div className="camera-icon">CAM</div>
                 <span className={`status-badge ${camera.status === 'active' ? 'status-active' : 'status-inactive'}`}>
-                  {camera.status === 'active' ? '🟢 Active' : '🔴 Inactive'}
+                  {camera.status === 'active' ? 'Active' : 'Inactive'}
                 </span>
               </div>
               <div className="camera-body">
                 <h3>{camera.name}</h3>
-                <p>📍 Location: {camera.location}</p>
-                <p>🔗 Stream: {camera.stream_url}</p>
-                <p>🆔 ID: {camera.id}</p>
+                <p>Location: {camera.location}</p>
+                <p>Stream: {camera.stream_url}</p>
+                <p>ID: {camera.id}</p>
               </div>
               <div className="camera-actions">
-                <button 
-                  className="btn btn-sm btn-secondary"
+                <button
+                  className="btn btn-sm btn-info"
                   onClick={() => handleEditCamera(camera)}
                 >
-                  ✏️ Edit
+                  Edit
                 </button>
-                <button 
+                <button
                   className="btn btn-sm btn-danger"
                   onClick={() => handleDeleteCamera(camera.id)}
                 >
-                  🗑️ Delete
+                  Delete
                 </button>
               </div>
             </div>
@@ -171,7 +177,7 @@ function AddCameraModal({ camera, formData, setFormData, onClose, onSubmit }) {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{camera ? 'Edit Camera' : 'Add New Camera'}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>×</button>
         </div>
         
         <form onSubmit={onSubmit}>

@@ -142,7 +142,7 @@ function AttendanceManagement() {
             className="btn btn-primary"
             onClick={() => setShowMarkModal(true)}
           >
-            ✓ Mark Attendance
+            Mark Attendance
           </button>
         </div>
       </div>
@@ -156,7 +156,7 @@ function AttendanceManagement() {
 
       {success && (
         <div className="alert alert-success">
-          ✓ {success}
+          {success}
           <button onClick={() => setSuccess('')}>×</button>
         </div>
       )}
@@ -166,7 +166,7 @@ function AttendanceManagement() {
         <div className="search-box">
           <input
             type="text"
-            placeholder="🔍 Search by student name..."
+            placeholder="Search by student name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -285,7 +285,7 @@ function AttendanceManagement() {
             ))
         ) : (
           <div className="no-data">
-            <p>📋 No attendance records found</p>
+            <p>No attendance records found</p>
             {searchTerm || filterDate ? (
               <p className="hint">Try adjusting your filters</p>
             ) : (

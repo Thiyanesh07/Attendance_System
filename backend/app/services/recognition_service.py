@@ -1,10 +1,10 @@
 import numpy as np
 import insightface
 from insightface.app import FaceAnalysis
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from scipy.spatial.distance import cosine
 import cv2
-from backend.app.config import config
+from app.config import config
 
 class FaceRecognitionService:
     def __init__(self):
@@ -72,7 +72,7 @@ class FaceRecognitionService:
         distance = cosine(embedding1, embedding2)
         return distance < threshold
 
-    def find_match(self, new_embedding: np.ndarray, registered_students: List[Dict[str, Any]], threshold: float = None) -> (str, float):
+    def find_match(self, new_embedding: np.ndarray, registered_students: List[Dict[str, Any]], threshold: float = None) -> Tuple[str, float]:
         if new_embedding is None:
             return "Unknown", 0.0
         

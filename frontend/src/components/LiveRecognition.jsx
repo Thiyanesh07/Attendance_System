@@ -1,145 +1,115 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getAllStudents, recognizeFrame, getCameraSnapshot } from '../api';
+import { getAllStudents, listCameras } from '../api';
 
 const LiveRecognition = () => {
-  const [selectedCameraId, setSelectedCameraId] = useState('');
   const [students, setStudents] = useState([]);
-  const [isRecognizing, setIsRecognizing] = useState(false);
-  const [recognizedFaces, setRecognizedFaces] = useState([]);
-  const [annotatedFrame, setAnnotatedFrame] = useState(null);
   const [error, setError] = useState(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const intervalRef = useRef(null);
-
-  // In a real app, you'd fetch a list of available cameras from the backend
-  // For now, we'll use a mock list of camera IDs (from localStorage in AddCameraForm)
   const [availableCameras, setAvailableCameras] = useState([]);
+  const [cameraStreams, setCameraStreams] = useState({}); // Store frames for each camera
+  const websockets = useRef({}); // Store WebSocket connections for each camera
 
   useEffect(() => {
-    const storedCameras = JSON.parse(localStorage.getItem('cameraIds')) || [];
-    setAvailableCameras(storedCameras);
-
-    const fetchStudents = async () => {
+    const initialize = async () => {
       try {
+        // Fetch students
         const fetchedStudents = await getAllStudents();
         setStudents(fetchedStudents);
+
+        // Fetch cameras from backend
+        const cameras = await listCameras();
+        setAvailableCameras(cameras);
+
+        // Start all cameras automatically
+        cameras.forEach(cameraId => {
+          startCameraStream(cameraId);
+        });
       } catch (err) {
-        console.error("Error fetching students:", err);
-        setError("Failed to load students for recognition.");
+        console.error("Error initializing:", err);
+        setError("Failed to initialize. Is the backend running?");
       }
     };
-    fetchStudents();
 
+    initialize();
+
+    // Cleanup all WebSocket connections on component unmount
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      Object.values(websockets.current).forEach(ws => {
+        if (ws) ws.close();
+      });
     };
   }, []);
 
-  const startRecognition = async () => {
-    if (!selectedCameraId) {
-      setError("Please select a camera.");
-      return;
+  const startCameraStream = (cameraId) => {
+    // Close existing connection if any
+    if (websockets.current[cameraId]) {
+      websockets.current[cameraId].close();
     }
 
-    setIsRecognizing(true);
-    setError(null);
-    setRecognizedFaces([]);
-    setAnnotatedFrame(null);
+    // Start a new WebSocket connection
+    const wsUrl = `ws://127.0.0.1:8000/api/v1/stream/ws/live/${cameraId}`;
+    const ws = new WebSocket(wsUrl);
 
-    let isProcessing = false;  // Prevent overlapping requests
-    
-    const processFrame = async () => {
-      if (isProcessing) return;  // Skip if already processing
-      
-      isProcessing = true;
-      try {
-        const snapshotBlob = await getCameraSnapshot(selectedCameraId);
-        const response = await recognizeFrame(snapshotBlob);
-        setRecognizedFaces(response.recognized_faces);
-        setAnnotatedFrame(`data:image/jpeg;base64,${response.annotated_frame}`);
-      } catch (err) {
-        setError(err.message || "Error during recognition.");
-        stopRecognition();
-      } finally {
-        isProcessing = false;
-      }
+    ws.onopen = () => {
+      console.log(`WebSocket connected for camera ${cameraId}`);
     };
 
-    intervalRef.current = setInterval(processFrame, 300); // Poll every 300ms for very smooth video with GPU
-  };
+    ws.onmessage = (event) => {
+      // The message is a Blob containing the image data
+      const frameUrl = URL.createObjectURL(event.data);
+      
+      // Clean up old frame URL to prevent memory leaks
+      setCameraStreams(prev => {
+        if (prev[cameraId]) {
+          URL.revokeObjectURL(prev[cameraId]);
+        }
+        return { ...prev, [cameraId]: frameUrl };
+      });
+    };
 
-  const stopRecognition = () => {
-    setIsRecognizing(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    ws.onerror = (err) => {
+      console.error(`WebSocket error for camera ${cameraId}:`, err);
+    };
+
+    ws.onclose = () => {
+      console.log(`WebSocket closed for camera ${cameraId}`);
+    };
+
+    websockets.current[cameraId] = ws;
   };
 
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-800">Live Face Recognition</h3>
       
-      <div>
-        <label htmlFor="cameraSelect" className="block text-sm font-medium text-gray-700">Select Camera</label>
-        <select
-          id="cameraSelect"
-          value={selectedCameraId}
-          onChange={(e) => setSelectedCameraId(e.target.value)}
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-          disabled={isRecognizing}
-        >
-          <option value="">-- Select a Camera --</option>
-          {availableCameras.map(camera => (
-            <option key={camera.id} value={camera.id}>
-              Camera {camera.id} ({camera.url === "0" ? "Webcam" : camera.url})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex space-x-4">
-        <button
-          onClick={startRecognition}
-          disabled={isRecognizing || !selectedCameraId}
-          className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-        >
-          Start Recognition
-        </button>
-        <button
-          onClick={stopRecognition}
-          disabled={!isRecognizing}
-          className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-        >
-          Stop Recognition
-        </button>
-      </div>
-
       {error && <p className="mt-4 text-red-600 text-center">Error: {error}</p>}
 
-      {isRecognizing && (
-        <p className="mt-4 text-center text-blue-600">Recognizing...</p>
-      )}
-      {annotatedFrame && (
-        <div className="mt-6">
-          <h4 className="text-lg font-medium text-gray-800">Live Feed</h4>
-          <img src={annotatedFrame} alt="Live Recognition Feed" className="mt-2 rounded-lg shadow-md w-full" />
-        </div>
-      )}
-
-      {recognizedFaces.length > 0 && (
-        <div className="mt-6">
-          <h4 className="text-lg font-medium text-gray-800">Recognized Faces</h4>
-          <ul className="mt-2 space-y-2">
-            {recognizedFaces.map((face, index) => (
-              <li key={index} className="bg-gray-50 p-3 rounded-md shadow-sm">
-                Face {index + 1}: <strong>{face.name}</strong> (Confidence: {(face.confidence * 100).toFixed(2)}% | Similarity: {(face.similarity * 100).toFixed(2)}%)
-              </li>
-            ))}
-          </ul>
+      {availableCameras.length === 0 ? (
+        <p className="text-center text-gray-600">No cameras available. Please add cameras in Camera Management.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {availableCameras.map(cameraId => (
+            <div key={cameraId} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="bg-blue-600 text-white px-4 py-2">
+                <h4 className="font-semibold">Camera {cameraId}</h4>
+              </div>
+              <div className="p-2">
+                {cameraStreams[cameraId] ? (
+                  <img 
+                    src={cameraStreams[cameraId]} 
+                    alt={`Camera ${cameraId} Live Feed`} 
+                    className="w-full h-auto rounded"
+                  />
+                ) : (
+                  <div className="bg-gray-200 w-full h-48 flex items-center justify-center rounded">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="mt-2 text-gray-600">Connecting...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

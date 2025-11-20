@@ -1,7 +1,7 @@
 import numpy as np
 from sqlalchemy.orm import Session
-from backend.app.services.recognition_service import FaceRecognitionService
-from backend.app.services.database import Student
+from app.services.recognition_service import FaceRecognitionService
+from app.services.database import Student
 from typing import List
 
 class TrainingService:
@@ -9,7 +9,7 @@ class TrainingService:
         self.recognition_service = recognition_service
 
     def generate_and_store_embedding(self, db: Session, student_name: str, image_data: np.ndarray, 
-                                     roll_number: str = None, email: str = None, photo_path: str = None):
+                                     roll_number: str = None, email: str = None, department: str = None, photo_path: str = None):
         embedding = self.recognition_service.get_face_embedding(image_data)
         if embedding is None:
             return None
@@ -34,6 +34,8 @@ class TrainingService:
                 db_student.roll_number = roll_number
             if email:
                 db_student.email = email
+            if department:
+                db_student.department = department
             if photo_path:
                 db_student.photo_path = photo_path
                 
@@ -45,6 +47,7 @@ class TrainingService:
                 name=student_name,
                 roll_number=roll_number,
                 email=email,
+                department=department,
                 photo_path=photo_path
             )
             db_student.set_embedding(embedding)
@@ -64,13 +67,15 @@ class TrainingService:
         } for student in students if student.get_embedding() is not None]
 
     def store_student_embedding(self, db: Session, student_name: str, embedding: np.ndarray,
-                                roll_number: str = None, email: str = None, photo_path: str = None):
+                                roll_number: str = None, email: str = None, department: str = None, photo_path: str = None, user_id: int = None):
         """Store student with pre-computed embedding"""
         db_student = Student(
             name=student_name,
             roll_number=roll_number,
             email=email,
-            photo_path=photo_path
+            department=department,
+            photo_path=photo_path,
+            user_id=user_id
         )
         db_student.set_embedding(embedding)
         db.add(db_student)
@@ -86,5 +91,6 @@ class TrainingService:
             "name": student.name,
             "roll_number": student.roll_number,
             "email": student.email,
+            "department": student.department,
             "photo_path": student.photo_path
         } for student in students]

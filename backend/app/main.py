@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.api.v1.api import api_router
-from backend.app.services.database import create_db_and_tables
+from app.api.v1.api import api_router
+from app.services.database import create_db_and_tables
 
 app = FastAPI(
     title="Real-Time Face Attendance Backend",
@@ -12,9 +12,9 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"], 
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
+    allow_methods=["*"],  # Allows all method
     allow_headers=["*"],  # Allows all headers
 )
 

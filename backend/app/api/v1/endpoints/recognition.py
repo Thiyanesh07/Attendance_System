@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 import numpy as np
 import cv2
-from backend.app.services.recognition_service import FaceRecognitionService
-from backend.app.services.training_service import TrainingService
-from backend.app.services.database import get_db, Attendance
-from backend.app.config import config, get_bounding_box_config, get_attendance_config, get_live_stream_config
+from app.services.recognition_service import FaceRecognitionService
+from app.services.training_service import TrainingService
+from app.services.database import get_db, Attendance
+from app.config import config, get_bounding_box_config, get_attendance_config, get_live_stream_config
 from fastapi import UploadFile, File
 from io import BytesIO
 from PIL import Image
@@ -38,7 +38,7 @@ def get_cached_students(db: Session):
         _student_cache["last_update"] = now
     return _student_cache["data"]
 
-@router.post("/recognition/recognize-frame")
+@router.post("/recognize-frame")
 async def recognize_frame(
     file: UploadFile = File(...),
     camera_id: str = None,

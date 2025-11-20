@@ -7,3 +7,11 @@ insightface
 numpy
 pandas
 SQLAlchemy
+websockets
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+python-dotenv

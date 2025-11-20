@@ -2,26 +2,27 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 50%, #dde3eb 100%);
   position: relative;
-  font-size: 14px;
 }
 
 .student-dashboard::before {
-  content: '';
+  content: `'`';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
 .navbar {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 0.8rem 0;
+  padding: 0.9rem 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .navbar-content {
@@ -31,12 +32,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 100%;
-  gap: 2rem;
 }
 
 .navbar-brand {
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #2c3e50;
   display: flex;
@@ -45,42 +44,12 @@
   letter-spacing: -0.3px;
 }
 
-.nav-tabs {
-  display: flex;
-  gap: 8px;
-}
-
-.nav-tab {
-  padding: 8px 20px;
-  background: transparent;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  color: #5a6c7d;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.nav-tab:hover {
-  background: rgba(102, 126, 234, 0.08);
-  color: #667eea;
-}
-
-.nav-tab.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-color: transparent;
-}
-
 .container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
   position: relative;
   z-index: 1;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .loading {
@@ -94,13 +63,13 @@
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   color: #2c3e50;
   transition: all 0.3s ease;
 }
@@ -173,7 +142,8 @@
   padding: 1rem;
 }
 
-.status-present-container, .status-absent-container {
+.status-present-container,
+.status-absent-container {
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -215,14 +185,16 @@
   color: white;
 }
 
-.status-present-container h3, .status-absent-container h3 {
+.status-present-container h3,
+.status-absent-container h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.3rem;
   font-weight: 700;
   color: #2c3e50;
 }
 
-.status-present-container p, .status-absent-container p {
+.status-present-container p,
+.status-absent-container p {
   margin: 0.2rem 0;
   opacity: 0.8;
   font-size: 13px;
@@ -251,7 +223,7 @@
 }
 
 .stat-card::before {
-  content: '';
+  content: `'`';
   position: absolute;
   top: 0;
   left: 0;
@@ -392,13 +364,43 @@
 }
 
 @media (max-width: 768px) {
-  .container { padding: 1.2rem; }
-  .student-header { flex-direction: column; text-align: center; }
-  .stats-grid { grid-template-columns: 1fr; }
-  .navbar-content { padding: 0 1.2rem; }
-  .card { padding: 1.2rem; }
-  .student-details h1 { font-size: 1.5rem; }
-  .avatar-placeholder { width: 75px; height: 75px; font-size: 2rem; }
-  .table { font-size: 12px; }
-  .table th, .table td { padding: 0.75rem; }
+  .container {
+    padding: 1.2rem;
+  }
+
+  .student-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .navbar-content {
+    padding: 0 1.2rem;
+  }
+
+  .card {
+    padding: 1.2rem;
+  }
+
+  .student-details h1 {
+    font-size: 1.5rem;
+  }
+
+  .avatar-placeholder {
+    width: 75px;
+    height: 75px;
+    font-size: 2rem;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.75rem;
+  }
 }

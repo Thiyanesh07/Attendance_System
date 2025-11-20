@@ -85,7 +85,7 @@ function LiveMonitoring() {
               </div>
               <div className="camera-info">
                 <h3>{camera.name}</h3>
-                <p>📍 {camera.location}</p>
+                <p>{camera.location}</p>
                 <p>🆔 ID: {camera.id}</p>
               </div>
             </div>
@@ -143,8 +143,8 @@ function CameraPreview({ cameraId }) {
 
 // Single Camera View Component
 function SingleCameraView({ camera }) {
-  const [recognizedFaces, setRecognizedFaces] = useState([])
   const [isRunning, setIsRunning] = useState(false)
+  const [recognizedFaces, setRecognizedFaces] = useState([])
   const [snapshot, setSnapshot] = useState(null)
 
   useEffect(() => {
@@ -210,17 +210,17 @@ function SingleCameraView({ camera }) {
         <div className="controls">
           {!isRunning ? (
             <button 
-              className="btn btn-success btn-lg"
               onClick={() => setIsRunning(true)}
+              className="btn btn-primary"
             >
               ▶️ Start Monitoring
             </button>
           ) : (
             <button 
-              className="btn btn-danger btn-lg"
               onClick={() => setIsRunning(false)}
+              className="btn btn-danger"
             >
-              ⏹️ Stop Monitoring
+              ⏸️ Stop Monitoring
             </button>
           )}
         </div>
@@ -228,7 +228,7 @@ function SingleCameraView({ camera }) {
 
       <div className="sidebar">
         <div className="card">
-          <h3>📊 Recognition Results</h3>
+          <h3>Recognition Results</h3>
           {recognizedFaces.length > 0 ? (
             <div className="faces-list">
               {recognizedFaces.map((face, index) => (
@@ -258,7 +258,7 @@ function SingleCameraView({ camera }) {
         </div>
 
         <div className="card">
-          <h3>📹 Camera Details</h3>
+          <h3>Camera Details</h3>
           <p><strong>Name:</strong> {camera.name}</p>
           <p><strong>Location:</strong> {camera.location}</p>
           <p><strong>ID:</strong> {camera.id}</p>

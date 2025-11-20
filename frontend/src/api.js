@@ -18,12 +18,15 @@ export const loginAdmin = async (username, password) => {
   return response.json();
 };
 
-export const addStudent = async (name, rollNumber, email, files) => {
+export const addStudent = async (name, rollNumber, email, department, files) => {
   const formData = new FormData();
   formData.append("name", name);
   formData.append("roll_number", rollNumber);
   if (email) {
     formData.append("email", email);
+  }
+  if (department) {
+    formData.append("department", department);
   }
   
   // Support multiple files
@@ -181,4 +184,20 @@ export const exportAttendanceCSV = async () => {
   a.click();
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
+};
+
+export const getStudentAttendance = async (studentEmail) => {
+  const response = await fetch(`${API_BASE_URL}/attendance/student/${encodeURIComponent(studentEmail)}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch student attendance");
+  }
+  return response.json();
+};
+
+export const getDashboardStats = async () => {
+  const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch dashboard stats");
+  }
+  return response.json();
 };
