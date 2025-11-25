@@ -17,6 +17,56 @@ A modern, AI-powered attendance management system using facial recognition techn
 | **📹 Camera System** | Multiple Cameras, RTSP/Webcam Support, Live Monitoring |
 | **💬 Messaging** | Student-Admin Communication, Read/Unread Status, Replies |
 
+## 📸 Screenshots
+
+### Login & Authentication
+![Login Page](imgs/Screenshot%202025-11-25%20104703.png)
+*Google OAuth 2.0 authentication with role-based login*
+
+### Admin Dashboard
+![Admin Dashboard](imgs/Screenshot%202025-11-25%20105517.png)
+*Admin control panel with statistics and navigation*
+
+### Student Management
+![Students Management](imgs/Screenshot%202025-11-25%20105534.png)
+*CRUD operations for student records with photo upload*
+
+### Attendance Management
+![Attendance Records](imgs/Screenshot%202025-11-25%20105552.png)
+*View and filter attendance records with export functionality*
+
+### Camera Configuration
+![Camera Management](imgs/Screenshot%202025-11-25%20105606.png)
+*Configure multiple cameras with resolution settings*
+
+### Live Monitoring
+![Live Recognition](imgs/Screenshot%202025-11-25%20105626.png)
+*Real-time face recognition with bounding boxes and detection*
+
+### Student Dashboard
+![Student View](imgs/Screenshot%202025-11-25%20105638.png)
+*Student portal with personal attendance statistics*
+
+### Messaging System
+![Messaging Hub](imgs/Screenshot%202025-11-25%20110628.png)
+*Communication interface between students and administrators*
+
+### User Management
+![User Roles](imgs/Screenshot%202025-11-25%20110734.png)
+*Manage user roles and permissions*
+
+### Attendance Analytics
+![Statistics Dashboard](imgs/Screenshot%202025-11-25%20110748.png)
+*Detailed attendance analytics and insights*
+
+### Camera Details
+![Camera Configuration Details](imgs/Screenshot%202025-11-25%20110809.png)
+*Individual camera setup with location and stream URL*
+
+### Recognition Results
+![Recognition Output](imgs/Screenshot%202025-11-25%20111036.png)
+*Face recognition results with confidence scores*
+
 ## 🏗️ System Architecture
 
 ```mermaid
