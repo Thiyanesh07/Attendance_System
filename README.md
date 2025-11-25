@@ -235,7 +235,7 @@ If you're interested in:
 **Please reach out to:**
 - 📧 **Email**: thiyanesh7777@gmail.com
 - 💼 **GitHub**: [@Thiyanesh07](https://github.com/Thiyanesh07)
-- 🔗 **LinkedIn**: [Thiyanesh](www.linkedin.com/in/thiyanesh-d-6a7637331)
+- 🔗 **LinkedIn**: www.linkedin.com/in/thiyanesh-d-6a7637331
 
 ---
 
