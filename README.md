@@ -155,9 +155,33 @@ User Login → Google OAuth → JWT Token → Role Assignment → Dashboard Acce
 | Send Messages | Broadcast announcements |
 
 ### 🎯 Face Recognition Flow
-```
-Camera Feed → Face Detection → Face Alignment → 
-Feature Extraction → Database Matching → Attendance Marking
+
+```mermaid
+flowchart TB
+    Start([Camera Feed]) --> Capture[Capture Frame]
+    Capture --> Detect[Face Detection<br/>SCRFD-10G Detector]
+    Detect --> Check{Face<br/>Detected?}
+    Check -->|No| Capture
+    Check -->|Yes| Align[Face Alignment<br/>5 Landmark Points]
+    Align --> Extract[Feature Extraction<br/>ArcFace ResNet50]
+    Extract --> Embed[512-D Embedding Vector]
+    Embed --> Compare[Compare with Database<br/>Cosine Similarity]
+    Compare --> Match{Similarity<br/>>Threshold?}
+    Match -->|No| Unknown[Mark as Unknown<br/>Red Bounding Box]
+    Match -->|Yes| Recognize[Student Recognized<br/>Green Bounding Box]
+    Recognize --> Cooldown{Within<br/>Cooldown?}
+    Cooldown -->|Yes| Display[Display Only]
+    Cooldown -->|No| Mark[Mark Attendance<br/>in Database]
+    Mark --> Display
+    Unknown --> Display
+    Display --> Capture
+    
+    style Start fill:#e1f5ff
+    style Detect fill:#fff4e1
+    style Extract fill:#fff4e1
+    style Recognize fill:#d4edda
+    style Unknown fill:#f8d7da
+    style Mark fill:#d4edda
 ```
 
 ## ⚙️ Technology Stack
