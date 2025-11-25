@@ -1,3 +1,6 @@
+# Backend - Complete backend code excluded
+backend/
+
 # Node modules
 frontend/node_modules/
 node_modules/
