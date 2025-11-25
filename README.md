@@ -233,9 +233,9 @@ If you're interested in:
 - Commercial licensing
 
 **Please reach out to:**
-- 📧 **Email**: thiyanesh07@example.com
+- 📧 **Email**: thiyanesh7777@gmail.com
 - 💼 **GitHub**: [@Thiyanesh07](https://github.com/Thiyanesh07)
-- 🔗 **LinkedIn**: [Your LinkedIn Profile]
+- 🔗 **LinkedIn**: [Thiyanesh](www.linkedin.com/in/thiyanesh-d-6a7637331)
 
 ---
 
