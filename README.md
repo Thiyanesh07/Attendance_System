@@ -11,35 +11,45 @@ A modern, AI-powered attendance management system using facial recognition techn
 - **Auto-Role Assignment** - Automatic role detection based on email domain
 
 ### 👤 Face Recognition
-- **Real-Time Detection** - Live face detection and recognition via webcam
-- **GPU Acceleration** - CUDA-optimized for faster processing
+- **Real-Time Detection** - Live face detection and recognition via webcam/IP cameras
+- **GPU Acceleration** - CUDA-optimized for faster processing (SCRFD-10G detector)
 - **High Accuracy** - InsightFace (buffalo_l model) with configurable thresholds
 - **Multi-Face Detection** - Detect and recognize multiple faces simultaneously
 - **CPU Fallback** - Automatic fallback to CPU if GPU unavailable
+- **Annotated Frames** - Visual bounding boxes with roll numbers on detected faces
 
 ### 📊 Attendance Management
 - **Automated Marking** - Auto-mark attendance on face recognition
 - **Manual Entry** - Admin can manually mark attendance
 - **Duplicate Prevention** - Configurable cooldown period (5 minutes default)
-- **Comprehensive Records** - View, filter, and export attendance data
-- **Multiple Cameras** - Support for multiple camera feeds
+- **Comprehensive Records** - View, filter, and export attendance data (CSV export)
+- **Multiple Cameras** - Support for multiple camera feeds with RTSP/webcam
+- **Statistics Dashboard** - Real-time attendance analytics and insights
 
 ### 🎯 Student Management
-- **Profile Management** - Add, edit, and delete student records
+- **Complete CRUD Operations** - Add, edit, view, and delete student records
 - **Multiple Photos** - Upload up to 10 photos per student for better recognition
 - **Department Organization** - Organize students by department
 - **Roll Number Linking** - Automatic linking with Google account
+- **Cascade Deletion** - Safely delete students with related attendance/messages cleanup
 
-### 📹 Live Monitoring
-- **WebSocket Streaming** - Real-time video feed with face recognition overlay
-- **Bounding Boxes** - Visual indicators for recognized/unknown faces
-- **Live Statistics** - Real-time attendance stats and face counts
-- **Camera Management** - Add, configure, and monitor multiple cameras
+### 📹 Camera Management & Live Monitoring
+- **Multiple Camera Support** - Add webcams, IP cameras, and RTSP streams
+- **Camera Configuration** - Set name, location, and resolution for each camera
+- **Edit Camera Details** - Update camera metadata (name, location, resolution)
+- **Resolution Presets** - Select from VGA, 720p, 1080p, 1440p, or 4K resolutions
+- **Real-Time Recognition** - Live video feed with face recognition overlay
+- **Visual Feedback** - Green boxes for recognized students, red for unknown faces
+- **Confidence Scores** - Display detection confidence and similarity scores
+- **Frame Processing** - Optimized frame processing every second with error handling
 
 ### 💬 Messaging System
-- **Broadcast Messages** - Send announcements to all students
-- **Individual Messaging** - Direct messages to specific students
-- **Message History** - Track all communications
+- **Student-to-Admin Messaging** - Students can send queries and messages
+- **Admin Replies** - Admins can reply directly to student messages
+- **Message Status Tracking** - Read/unread indicators and reply status
+- **Message Deletion** - Both students and admins can delete messages
+- **Filter Options** - Filter by all, read, or unread messages (admin view)
+- **Real-Time Updates** - Auto-refresh every 30 seconds for new messages
 
 ## 🏗️ Architecture
 
@@ -204,7 +214,8 @@ See [README_GOOGLE_AUTH.txt](README_GOOGLE_AUTH.txt) for detailed instructions.
 #### Start Backend Server
 ```bash
 cd backend
-uvicorn app.main:app --reload
+conda activate face
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 Backend will run on: http://localhost:8000
 API Documentation: http://localhost:8000/docs
@@ -216,12 +227,21 @@ npm run dev
 ```
 Frontend will run on: http://localhost:5173
 
-#### GPU Mode (Optional)
-For faster recognition with NVIDIA GPU:
+#### Running Multiple Frontend Instances (Optional)
+For testing with multiple users or ports:
 ```bash
-cd backend
-.\start_gpu.ps1
+# Admin frontend (Port 5173)
+npm run dev:admin
+
+# Student 1 frontend (Port 5174)
+npm run dev:student1
+
+# Student 2 frontend (Port 5175)
+npm run dev:student2
 ```
+
+#### GPU Mode
+The backend automatically uses GPU acceleration if CUDA is available. GPU detection happens on startup with CUDA Execution Provider.
 
 ## 📖 Usage
 
@@ -252,13 +272,35 @@ cd backend
 4. Upload 3-5 clear face photos (different angles)
 5. System automatically trains recognition model
 
+### Managing Cameras
+1. Go to **Cameras** tab
+2. Click "Add Camera"
+3. Enter:
+   - **Camera Name** (e.g., "Main Entrance Camera")
+   - **Stream URL** ("0" for webcam, "1" for second camera, or RTSP URL like `rtsp://user:pass@ip:port/path`)
+   - **Location** (e.g., "Building A, 1st Floor")
+   - **Resolution** (Select from: 640x480, 1280x720, 1920x1080, 2560x1440, 3840x2160)
+4. Click "Add Camera" to save
+5. **Edit Camera**: Click "Edit" to update name, location, or resolution (stream URL cannot be changed)
+6. **Delete Camera**: Click "Delete" to remove camera
+
+**Note for RTSP Cameras:**
+- If password contains special characters like `@`, URL-encode them (e.g., `@` becomes `%40`)
+- Example: `rtsp://user:pass%40word@192.168.1.100:554/stream`
+
 ### Live Recognition
 1. Go to **Live Monitoring** tab
-2. Select camera from dropdown
-3. Click "Start Recognition"
-4. System detects faces and marks attendance automatically
-5. Green boxes = Recognized students
-6. Red boxes = Unknown faces
+2. Select camera from list (shows camera name and location)
+3. Click on camera card to view details
+4. Click "▶️ Start Monitoring"
+5. System processes frames every second and detects faces
+6. **Green boxes** = Recognized students (with roll number)
+7. **Red boxes** = Unknown faces
+8. View **Recognition Results** in sidebar with:
+   - Student name
+   - Similarity score
+   - Detection confidence
+9. Attendance is automatically marked with configurable cooldown
 
 ## ⚙️ Configuration
 
@@ -315,12 +357,12 @@ live_stream:
 - `camera_id`, `marked_by`
 
 ### Cameras Table
-- `id`, `name`, `stream_url`, `location`
+- `id`, `name`, `stream_url`, `location`, `resolution`
 - `is_active`, `created_at`
 
 ### Messages Table
-- `id`, `sender_id`, `recipient_id`, `message`
-- `timestamp`, `is_read`
+- `id`, `sender_id`, `sender_email`, `subject`, `message`
+- `admin_reply`, `is_read`, `created_at`, `reply_date`
 
 ## 📊 API Endpoints
 
@@ -344,12 +386,22 @@ live_stream:
 - `GET /attendance/stats` - Attendance statistics
 
 ### Cameras
-- `GET /cameras/` - List cameras
-- `POST /cameras/` - Add camera
-- `PUT /cameras/{id}` - Update camera
-- `DELETE /cameras/{id}` - Delete camera
+- `GET /cameras/` - List all active cameras
+- `POST /cameras/add` - Add new camera (stream_url, name, location, resolution)
+- `PUT /cameras/{id}` - Update camera details (name, location, resolution)
+- `DELETE /cameras/{id}` - Delete/deactivate camera
+- `GET /cameras/{id}/snapshot` - Get camera snapshot
+
+### Messages
+- `POST /messages/send` - Send message to admin (students)
+- `GET /messages/admin/all` - Get all messages (admin)
+- `GET /messages/student/{id}` - Get student's messages
+- `POST /messages/{id}/reply` - Reply to message (admin)
+- `PUT /messages/{id}/read` - Mark message as read (admin)
+- `DELETE /messages/{id}` - Delete message (admin/student own messages)
 
 ### Live Recognition
+- `POST /recognition/recognize-frame` - Process frame and recognize faces
 - `WebSocket /ws/recognition/{camera_id}` - Real-time recognition stream
 
 See full API documentation at: http://localhost:8000/docs
@@ -389,7 +441,43 @@ python -c "import onnxruntime; print(onnxruntime.get_available_providers())"
 - `migrate_database.py` - Initial database setup
 - `migrate_add_user_id.py` - Add user_id to students
 - `migrate_add_department.py` - Add department field
+- `migrate_add_camera_fields.py` - Add location and resolution to cameras
 - `migrate_database_schema.py` - Full schema migration
+
+## 🎯 Project Status
+
+### ✅ Completed Features
+- ✅ Google OAuth 2.0 authentication with role-based access
+- ✅ Student management with CRUD operations
+- ✅ Face recognition with GPU acceleration (InsightFace buffalo_l)
+- ✅ Attendance tracking with auto-marking and cooldown
+- ✅ Multiple camera support (webcam, IP cameras, RTSP streams)
+- ✅ Camera management with full CRUD and configuration
+- ✅ Live monitoring with real-time face recognition
+- ✅ Messaging system with student-admin communication
+- ✅ Message deletion for both students and admins
+- ✅ Attendance export to CSV
+- ✅ Dashboard with statistics and analytics
+- ✅ Multi-port frontend support for testing
+- ✅ Complete error handling and validation
+- ✅ Database cascade deletion for data integrity
+
+### 🔧 Technical Specifications
+- **Backend**: FastAPI with Python 3.10
+- **Frontend**: React 18 with Vite
+- **Face Recognition**: InsightFace (buffalo_l) with SCRFD-10G detector
+- **Database**: SQLite with SQLAlchemy ORM
+- **Authentication**: Google OAuth 2.0 + JWT
+- **Real-time**: WebSocket streaming
+- **GPU**: CUDA Execution Provider (auto-fallback to CPU)
+- **Camera Support**: OpenCV with RTSP/webcam integration
+
+### 📊 Performance Metrics
+- Face detection: ~30 FPS on GPU
+- Recognition accuracy: High (buffalo_l model)
+- Frame processing: 1 second intervals (configurable)
+- Attendance cooldown: 5 minutes (configurable)
+- Cache refresh: 30 seconds for student embeddings
 
 ## 🤝 Contributing
 

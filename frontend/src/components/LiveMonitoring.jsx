@@ -15,12 +15,27 @@ function LiveMonitoring() {
       setLoading(true)
       const { listCameras } = await import('../api')
       const response = await listCameras()
-      const cameraObjects = response.map(id => ({
-        id,
-        name: `Camera ${id}`,
-        location: `Location ${id}`,
-        status: 'active'
-      }))
+      // Handle both old format (array of IDs) and new format (array of camera objects)
+      const cameraObjects = response.map(camera => {
+        if (typeof camera === 'object' && camera.id) {
+          // New format: camera object with all details
+          return {
+            id: camera.id,
+            name: camera.name || `Camera ${camera.id}`,
+            location: camera.location || 'Not specified',
+            resolution: camera.resolution || 'Not specified',
+            status: camera.is_active === 1 ? 'active' : 'inactive'
+          }
+        } else {
+          // Old format: just camera ID
+          return {
+            id: camera,
+            name: `Camera ${camera}`,
+            location: `Location ${camera}`,
+            status: 'active'
+          }
+        }
+      })
       setCameras(cameraObjects)
       setLoading(false)
     } catch (err) {
@@ -146,17 +161,26 @@ function SingleCameraView({ camera }) {
   const [isRunning, setIsRunning] = useState(false)
   const [recognizedFaces, setRecognizedFaces] = useState([])
   const [snapshot, setSnapshot] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     let interval
+    let isProcessing = false
+    
     if (isRunning) {
-      interval = setInterval(async () => {
+      const processFrame = async () => {
+        if (isProcessing) return // Skip if already processing
+        
+        isProcessing = true
         try {
           const { getCameraSnapshot, recognizeFrame } = await import('../api')
           const blob = await getCameraSnapshot(camera.id)
 
+          // Create a File object from blob
+          const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' })
+          
           // Recognize faces in the frame
-          const result = await recognizeFrame(blob, camera.id)
+          const result = await recognizeFrame(file, camera.id)
           
           // Use annotated frame with bounding boxes if available
           if (result.annotated_frame) {
@@ -174,10 +198,18 @@ function SingleCameraView({ camera }) {
           if (result.recognized_faces) {
             setRecognizedFaces(result.recognized_faces)
           }
+          
+          setError(null) // Clear error on success
         } catch (err) {
           console.error('Error during recognition:', err)
+          setError(err.message || 'Recognition error')
+        } finally {
+          isProcessing = false
         }
-      }, 500) // Process every 0.5 seconds for faster updates
+      }
+      
+      processFrame() // Initial call
+      interval = setInterval(processFrame, 1000) // Process every 1 second
     }
 
     return () => {
@@ -207,10 +239,25 @@ function SingleCameraView({ camera }) {
           )}
         </div>
 
+        {error && (
+          <div className="error-message" style={{
+            color: '#dc3545',
+            padding: '10px',
+            backgroundColor: '#f8d7da',
+            borderRadius: '5px',
+            margin: '10px 0'
+          }}>
+            ⚠️ Error: {error}
+          </div>
+        )}
+
         <div className="controls">
           {!isRunning ? (
             <button 
-              onClick={() => setIsRunning(true)}
+              onClick={() => {
+                setIsRunning(true)
+                setError(null)
+              }}
               className="btn btn-primary"
             >
               ▶️ Start Monitoring
@@ -229,31 +276,44 @@ function SingleCameraView({ camera }) {
       <div className="sidebar">
         <div className="card">
           <h3>Recognition Results</h3>
-          {recognizedFaces.length > 0 ? (
+          {isRunning && recognizedFaces.length === 0 && (
+            <p className="no-data">👀 Waiting for faces...</p>
+          )}
+          {!isRunning && recognizedFaces.length === 0 && (
+            <p className="no-data">Start monitoring to detect faces</p>
+          )}
+          {recognizedFaces.length > 0 && (
             <div className="faces-list">
               {recognizedFaces.map((face, index) => (
-                <div key={index} className="face-item">
-                  <div className="face-avatar">
+                <div key={index} className={`face-item ${face.name === 'Unknown' ? 'unknown' : 'known'}`}>
+                  <div className="face-avatar" style={{
+                    backgroundColor: face.name === 'Unknown' ? '#dc3545' : '#28a745'
+                  }}>
                     {face.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="face-info">
                     <h4>{face.name}</h4>
-                    {face.roll_number && <p><strong>Roll:</strong> {face.roll_number}</p>}
-                    {face.email && <p><strong>Email:</strong> {face.email}</p>}
-                    <p><strong>Camera:</strong> {camera.id}</p>
-                    <p><strong>Confidence:</strong> {(face.similarity * 100).toFixed(1)}%</p>
-                    <div className="confidence-bar">
-                      <div 
-                        className="confidence-fill"
-                        style={{ width: `${face.similarity * 100}%` }}
-                      />
-                    </div>
+                    {face.name !== 'Unknown' && (
+                      <>
+                        <p><strong>Similarity:</strong> {(face.similarity * 100).toFixed(1)}%</p>
+                        <div className="confidence-bar">
+                          <div 
+                            className="confidence-fill"
+                            style={{ 
+                              width: `${face.similarity * 100}%`,
+                              backgroundColor: face.similarity > 0.7 ? '#28a745' : '#ffc107'
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
+                    <p style={{ fontSize: '0.85em', color: '#666' }}>
+                      Detection: {(face.confidence * 100).toFixed(1)}%
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="no-data">No faces detected yet</p>
           )}
         </div>
 
@@ -261,6 +321,9 @@ function SingleCameraView({ camera }) {
           <h3>Camera Details</h3>
           <p><strong>Name:</strong> {camera.name}</p>
           <p><strong>Location:</strong> {camera.location}</p>
+          {camera.resolution && camera.resolution !== 'Not specified' && (
+            <p><strong>Resolution:</strong> {camera.resolution}</p>
+          )}
           <p><strong>ID:</strong> {camera.id}</p>
           <p><strong>Status:</strong> <span className="status-active">🟢 Active</span></p>
         </div>

@@ -118,10 +118,17 @@ async def delete_student(student_id: int, db: Session = Depends(get_db)):
             if os.path.exists(photo_path):
                 os.remove(photo_path)
     
-    # Delete associated User account if exists
+    # Delete associated User account and related data if exists
     if student.user_id:
         user = db.query(User).filter(User.id == student.user_id).first()
         if user:
+            # Import Message model to delete messages
+            from app.api.v1.endpoints.messages import Message
+            
+            # Delete all messages sent by this user
+            db.query(Message).filter(Message.sender_id == user.id).delete()
+            
+            # Delete the user
             db.delete(user)
     
     # Delete student from database

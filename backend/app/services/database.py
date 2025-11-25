@@ -53,6 +53,8 @@ class Camera(Base):
     id = Column(Integer, primary_key=True, index=True)
     stream_url = Column(String)
     name = Column(String)
+    location = Column(String, nullable=True)
+    resolution = Column(String, nullable=True)  # e.g., "1920x1080", "1280x720"
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Integer, default=1)  # 1 for active, 0 for inactive
 

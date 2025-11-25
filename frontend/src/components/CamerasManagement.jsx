@@ -9,7 +9,8 @@ function CamerasManagement() {
   const [formData, setFormData] = useState({
     stream_url: '',
     name: '',
-    location: ''
+    location: '',
+    resolution: ''
   })
 
   useEffect(() => {
@@ -21,13 +22,14 @@ function CamerasManagement() {
       setLoading(true)
       const { listCameras } = await import('../api')
       const response = await listCameras()
-      // Convert camera IDs to objects
-      const cameraObjects = response.map(id => ({
-        id,
-        name: `Camera ${id}`,
-        location: 'Location ' + id,
-        stream_url: id.toString(),
-        status: 'active'
+      // Use real camera data from backend
+      const cameraObjects = response.map(camera => ({
+        id: camera.id,
+        name: camera.name || `Camera ${camera.id}`,
+        location: camera.location || 'Not specified',
+        stream_url: camera.stream_url,
+        resolution: camera.resolution || 'Not specified',
+        status: camera.is_active === 1 ? 'active' : 'inactive'
       }))
       setCameras(cameraObjects)
       setLoading(false)
@@ -39,7 +41,7 @@ function CamerasManagement() {
 
   const handleAddCamera = () => {
     setSelectedCamera(null)
-    setFormData({ stream_url: '', name: '', location: '' })
+    setFormData({ stream_url: '', name: '', location: '', resolution: '' })
     setShowModal(true)
   }
 
@@ -48,7 +50,8 @@ function CamerasManagement() {
     setFormData({
       stream_url: camera.stream_url,
       name: camera.name,
-      location: camera.location
+      location: camera.location,
+      resolution: camera.resolution
     })
     setShowModal(true)
   }
@@ -72,31 +75,72 @@ function CamerasManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    if (selectedCamera) {
+      // Edit existing camera - only update name, location, and resolution
+      try {
+        const { updateCamera } = await import('../api')
+        await updateCamera(
+          selectedCamera.id,
+          formData.name.trim() || null,
+          formData.location.trim() || null,
+          formData.resolution || null
+        )
+        alert('Camera updated successfully!')
+        setShowModal(false)
+        setFormData({
+          name: '',
+          location: '',
+          stream_url: '',
+          resolution: ''
+        })
+        fetchCameras()
+      } catch (err) {
+        console.error('Error updating camera:', err)
+        alert('Failed to update camera: ' + err.message)
+      }
+      return
+    }
+    
+    // Add new camera
     if (!formData.stream_url || formData.stream_url.trim() === '') {
       alert('Please enter a camera stream URL')
       return
     }
     
-    if (selectedCamera) {
-      alert('Edit functionality requires backend API implementation. Currently, you can only add or delete cameras.')
-      return
-    }
-    
     try {
       const { addCamera } = await import('../api')
-      // Pass just the string URL, not an object
-      await addCamera(formData.stream_url.trim())
+      // Send all camera data including name, location, and resolution
+      await addCamera(
+        formData.stream_url.trim(),
+        formData.name.trim() || null,
+        formData.location.trim() || null,
+        formData.resolution.trim() || null
+      )
       alert('Camera added successfully!')
       setShowModal(false)
       setFormData({
         name: '',
         location: '',
-        stream_url: ''
+        stream_url: '',
+        resolution: ''
       })
       fetchCameras()
     } catch (err) {
       console.error('Error adding camera:', err)
-      alert('Failed to add camera: ' + err.message)
+      let errorMessage = err.message || 'Failed to add camera'
+      
+      // Provide more helpful error messages
+      if (errorMessage.includes('already exists')) {
+        errorMessage = 'This camera stream URL is already added. Please use a different camera or remove the existing one first.'
+      } else if (errorMessage.includes('Could not connect')) {
+        errorMessage = 'Cannot connect to camera stream. Please check:\n\n' +
+                      '• The stream URL is correct\n' +
+                      '• The camera is powered on and accessible\n' +
+                      '• Network connection is working\n' +
+                      '• Authentication credentials are correct (if using RTSP)'
+      }
+      
+      alert(errorMessage)
     }
   }
 
@@ -131,6 +175,7 @@ function CamerasManagement() {
               <div className="camera-body">
                 <h3>{camera.name}</h3>
                 <p>Location: {camera.location}</p>
+                <p>Resolution: {camera.resolution}</p>
                 <p>Stream: {camera.stream_url}</p>
                 <p>ID: {camera.id}</p>
               </div>
@@ -199,10 +244,12 @@ function AddCameraModal({ camera, formData, setFormData, onClose, onSubmit }) {
                 value={formData.stream_url}
                 onChange={(e) => setFormData({...formData, stream_url: e.target.value})}
                 placeholder="e.g., 0 for webcam or rtsp://..."
-                required
+                required={!camera}
+                readOnly={camera ? true : false}
+                style={camera ? {backgroundColor: '#f0f0f0', cursor: 'not-allowed'} : {}}
               />
               <p className="help-text">
-                Enter "0" for default webcam, "1" for second camera, or RTSP URL for IP camera
+                {camera ? 'Stream URL cannot be changed after camera is added' : 'Enter "0" for default webcam, "1" for second camera, or RTSP URL for IP camera'}
               </p>
             </div>
 
@@ -214,6 +261,24 @@ function AddCameraModal({ camera, formData, setFormData, onClose, onSubmit }) {
                 onChange={(e) => setFormData({...formData, location: e.target.value})}
                 placeholder="e.g., Main Entrance, Building A"
               />
+            </div>
+
+            <div className="form-group">
+              <label>Resolution</label>
+              <select
+                value={formData.resolution}
+                onChange={(e) => setFormData({...formData, resolution: e.target.value})}
+              >
+                <option value="">Select Resolution</option>
+                <option value="640x480">640x480 (VGA - Standard Definition)</option>
+                <option value="1280x720">1280x720 (HD - 720p)</option>
+                <option value="1920x1080">1920x1080 (Full HD - 1080p)</option>
+                <option value="2560x1440">2560x1440 (QHD - 1440p)</option>
+                <option value="3840x2160">3840x2160 (4K UHD)</option>
+              </select>
+              <p className="help-text">
+                Select camera resolution (optional)
+              </p>
             </div>
           </div>
 

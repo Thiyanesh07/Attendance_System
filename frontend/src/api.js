@@ -88,8 +88,13 @@ export const recognizeFrame = async (file, cameraId = null) => {
   return response.json();
 };
 
-export const addCamera = async (streamUrl) => {
-  const response = await fetch(`${API_BASE_URL}/cameras/add?stream_url=${encodeURIComponent(streamUrl)}`, {
+export const addCamera = async (streamUrl, name = null, location = null, resolution = null) => {
+  const params = new URLSearchParams({ stream_url: streamUrl });
+  if (name) params.append('name', name);
+  if (location) params.append('location', location);
+  if (resolution) params.append('resolution', resolution);
+  
+  const response = await fetch(`${API_BASE_URL}/cameras/add?${params.toString()}`, {
     method: "POST",
   });
   if (!response.ok) {
@@ -109,7 +114,24 @@ export const listCameras = async () => {
     throw new Error("Failed to fetch cameras");
   }
   const data = await response.json();
-  return data.cameras ? data.cameras.map(cam => cam.id) : [];
+  // Return full camera objects
+  return Array.isArray(data) ? data : (data.cameras || []);
+};
+
+export const updateCamera = async (cameraId, name = null, location = null, resolution = null) => {
+  const params = new URLSearchParams();
+  if (name) params.append('name', name);
+  if (location !== null) params.append('location', location);
+  if (resolution !== null) params.append('resolution', resolution);
+  
+  const response = await fetch(`${API_BASE_URL}/cameras/${cameraId}?${params.toString()}`, {
+    method: "PUT",
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Failed to update camera");
+  }
+  return response.json();
 };
 
 export const removeCameraStream = async (cameraId) => {

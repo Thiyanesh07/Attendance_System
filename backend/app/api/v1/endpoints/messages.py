@@ -192,20 +192,23 @@ async def delete_message(
     db: Session = Depends(get_db)
 ):
     """
-    Delete a message (Admin only)
+    Delete a message
+    - Admin can delete any message
+    - Student can only delete their own messages
     """
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
-    
     message = db.query(Message).filter(Message.id == message_id).first()
     
     if not message:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Message not found"
+        )
+    
+    # Check permissions
+    if current_user.role == "student" and message.sender_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only delete your own messages"
         )
     
     db.delete(message)

@@ -143,6 +143,31 @@ function Messaging({ userRole, userId, userEmail }) {
     }
   }
 
+  const handleDeleteMessage = async (messageId) => {
+    if (!window.confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/messages/${messageId}`, {
+        method: 'DELETE',
+        headers: getAuthHeader()
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to delete message')
+      }
+
+      setSuccess('Message deleted successfully!')
+      setSelectedMessage(null)
+      fetchMessages()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   const handleViewMessage = (message) => {
     setSelectedMessage(message)
     if (userRole === 'admin' && !message.is_read) {
@@ -300,7 +325,14 @@ function Messaging({ userRole, userId, userEmail }) {
           <div className="modal-content message-detail" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-section">
               <h2>{selectedMessage.subject}</h2>
-              <button className="modal-close" onClick={() => setSelectedMessage(null)}>×</button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button 
+                  className="btn btn-danger btn-sm"
+                  onClick={() => handleDeleteMessage(selectedMessage.id)}
+                  title="Delete message"
+                >🗑️ Delete</button>
+                <button className="modal-close" onClick={() => setSelectedMessage(null)}>×</button>
+              </div>
             </div>
             
             <div className="message-detail-content">
