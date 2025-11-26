@@ -309,7 +309,7 @@ If you're interested in:
 **Please reach out to:**
 - 📧 **Email**: thiyanesh7777@gmail.com
 - 💼 **GitHub**: [@Thiyanesh07](https://github.com/Thiyanesh07)
-- 🔗 **LinkedIn**: www.linkedin.com/in/thiyanesh-d-6a7637331
+- 🔗 **LinkedIn**: [THIYANESH D](www.linkedin.com/in/thiyanesh-d-6a7637331)
 
 ---
 
