@@ -20,18 +20,18 @@ A modern, AI-powered attendance management system using facial recognition techn
 ## 📸 Screenshots
 
 ### Login & Authentication
-![Login Page](imgs/Screenshot%202025-11-25%20104703.png)
-*Google OAuth 2.0 authentication with role-based login*
+![Login Page](imgs/Screenshot%202025-11-26%20092043.png)
+*Login page with Google OAuth 2.0 authentication for secure access to the system.*
 
 ### Admin Dashboard
 ![Admin Dashboard](imgs/Screenshot%202025-11-25%20105517.png)
 *Admin control panel with statistics and navigation*
 
-### Student Management
+### Admin  Management
 ![Students Management](imgs/Screenshot%202025-11-25%20105534.png)
 *CRUD operations for student records with photo upload*
 
-### Attendance Management
+### Student Management
 ![Attendance Records](imgs/Screenshot%202025-11-25%20105552.png)
 *View and filter attendance records with export functionality*
 
@@ -43,7 +43,7 @@ A modern, AI-powered attendance management system using facial recognition techn
 ![Live Recognition](imgs/Screenshot%202025-11-25%20105626.png)
 *Real-time face recognition with bounding boxes and detection*
 
-### Student Dashboard
+### Attendance Logs
 ![Student View](imgs/Screenshot%202025-11-25%20105638.png)
 *Student portal with personal attendance statistics*
 
@@ -51,15 +51,12 @@ A modern, AI-powered attendance management system using facial recognition techn
 ![Messaging Hub](imgs/Screenshot%202025-11-25%20110628.png)
 *Communication interface between students and administrators*
 
-### User Management
-![User Roles](imgs/Screenshot%202025-11-25%20110734.png)
-*Manage user roles and permissions*
 
-### Attendance Analytics
+### Student Messaging System
 ![Statistics Dashboard](imgs/Screenshot%202025-11-25%20110748.png)
 *Detailed attendance analytics and insights*
 
-### Camera Details
+### Student Page
 ![Camera Configuration Details](imgs/Screenshot%202025-11-25%20110809.png)
 *Individual camera setup with location and stream URL*
 
@@ -265,7 +262,10 @@ This project is licensed under the MIT License.
 
 ## 👥 Authors
 
-- Thiyanesh07 - [GitHub](https://github.com/Thiyanesh07)
+- Thiyanesh - [GitHub](https://github.com/Thiyanesh07)
+- Kishore - [GitHub](https://github.com/KishoreR2k7)
+- Varshini    - [Github](https://github.com/VARSHINI71710)
+- Vihashini    - [Github](https://github.com/vihashini-18)
 
 ## 🙏 Acknowledgments
 
@@ -277,7 +277,7 @@ This project is licensed under the MIT License.
 ## 📞 Contact & Support
 
 For issues and questions:
-- 📧 Email: [your-email@example.com]
+- 📧 Email: thiyanesh7777@gmail.com
 - 💬 GitHub Issues: [Open an issue](https://github.com/Thiyanesh07/Attendance_System/issues)
 
 ---
